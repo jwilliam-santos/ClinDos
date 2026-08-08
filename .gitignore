@@ -1,0 +1,27 @@
+
+# Build
+build/
+
+# Compiled object files
+*.o
+
+# Kernel binaries
+*.bin
+*.elf
+
+# Disk images
+*.iso
+*.img
+
+# Debug / temporary files
+*.log
+*.tmp
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+```
