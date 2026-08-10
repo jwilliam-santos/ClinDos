@@ -1,35 +1,35 @@
-OUTPUT_FORMAT(elf64-x86-64)
-OUTPUT_ARCH(i386:x86-64)
-
-ENTRY(_start)
+ENTRY(entry)
 
 SECTIONS
 {
-    . = 1M;
+    . = 0x1000;
 
-    .multiboot ALIGN(8) :
+    .text :
     {
-        KEEP(*(.multiboot))
+        *(.text*)
     }
 
-    .text ALIGN(4K) :
+    .rodata :
     {
-        *(.text)
+        *(.rodata*)
     }
 
-    .rodata ALIGN(4K) :
+    .data :
     {
-        *(.rodata)
+        *(.data*)
     }
 
-    .data ALIGN(4K) :
+    .bss :
     {
-        *(.data)
-    }
-
-    .bss ALIGN(4K) :
-    {
+        __bss_start = .;
+        *(.bss*)
         *(COMMON)
-        *(.bss)
+        __bss_end = .;
+    }
+
+    .idt :
+    {
+        __idt_start__ =  0xF000;
+         
     }
 }

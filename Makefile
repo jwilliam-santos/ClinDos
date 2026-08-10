@@ -1,59 +1,64 @@
+CC      = gcc
+LD      = ld
+AS      = nasm
+OBJCOPY = objcopy
 
-ASM = nasm
-CC  = gcc
-LD  = gcc
+CFLAGS = -m32 -ffreestanding -fno-pic -fno-pie -fno-stack-protector -nostdlib -nostartfiles -c
 
-
-CFLAGS = -m64 -ffreestanding -O2 -Wall -Wextra -fno-pie -mno-red-zone -Iinclude -MMD -MP
-LDFLAGS = -T linker.ld -ffreestanding -O2 -nostdlib -no-pie
+LDFLAGS = -m elf_i386 -T linker.ld
 
 BUILD = build
-KERNEL = $(BUILD)/clin-dos.bin
-ISO = $(BUILD)/ClinDos.iso
+INCLUDE = include
 
+BOOTLOADER = core/bootloader.asm
+KENTRY	   = core/kernel_entry.asm
+KERNEL	   = kernel.c
 
-C_SOURCES = $(wildcard kernel/*.c)
-C_OBJECTS = $(patsubst kernel/%.c,$(BUILD)/%.o,$(C_SOURCES))
+CFILES   := $(wildcard include/*.c)
+ASMFILES := $(wildcard include/*.asm)
 
-ASM_SOURCES = $(wildcard kernel/*.asm)
-ASM_OBJECTS = $(patsubst kernel/%.asm,$(BUILD)/%.o,$(ASM_SOURCES))
+OBJS_C   := $(patsubst include/%.c,$(BUILD)/%.o,$(CFILES))
+OBJS_ASM := $(patsubst include/%.asm,$(BUILD)/%.o,$(ASMFILES))
 
-OBJECTS = $(ASM_OBJECTS) $(C_OBJECTS)
+all: compile
 
+compile: $(BUILD)/kernel.img
 
-all: $(ISO)
-
-
-$(BUILD)/%.o: kernel/%.c
+$(BUILD):
 	mkdir -p $(BUILD)
-	$(CC) $(CFLAGS) -c $< -o $@
+
+# Core
+$(BUILD)/bootloader.bin: $(BOOTLOADER) | $(BUILD)
+	$(AS) -f bin $< -o $@
+
+$(BUILD)/kernel_entry.o: $(KENTRY) | $(BUILD)
+	$(AS) -f elf32 $< -o $@
+
+# Kernel
+$(BUILD)/kernel.o: $(KERNEL) | $(BUILD)
+	$(CC) $(CFLAGS) $< -o $@
 
 
-$(BUILD)/%.o: kernel/%.asm
-	mkdir -p $(BUILD)
-	$(ASM) -f elf64 $< -o $@
+# Other dependencies
+$(BUILD)/%.o: include/%.c | $(BUILD)
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD)/%.o: include/%.asm | $(BUILD)
+	$(AS) -f elf32 $< -o $@
+
+# Mounting IMG
+$(BUILD)/kernel.elf: $(BUILD)/kernel_entry.o $(BUILD)/kernel.o $(OBJS_C) $(OBJS_ASM)
+	$(LD) $(LDFLAGS) $^ -o $@
+
+$(BUILD)/kernel.bin: $(BUILD)/kernel.elf
+	$(OBJCOPY) -O binary $< $@
+
+$(BUILD)/kernel.img: $(BUILD)/bootloader.bin $(BUILD)/kernel.bin
+	cat $^ > $@
 
 
-$(KERNEL): $(OBJECTS) linker.ld
-	mkdir -p $(BUILD)
-	$(LD) $(LDFLAGS) -o $@ $(OBJECTS)
-
-
-$(ISO): $(KERNEL) boot/grub/grub.cfg
-	mkdir -p $(BUILD)/iso/boot/grub
-	cp $(KERNEL) $(BUILD)/iso/boot/clin-dos.bin
-	cp boot/grub/grub.cfg $(BUILD)/iso/boot/grub/grub.cfg
-	grub-mkrescue -o $(ISO) $(BUILD)/iso
-
-
-QEMU = /mnt/c/Program\Files/qemu/qemu-system-x86_64.exe
-
-run: $(ISO)
-	$(QEMU) -cdrom $(ISO)
-
+run: $(BUILD)/kernel.img
+	qemu-system-i386 $<
 
 clean:
 	rm -rf $(BUILD)
-
-
--include $(C_OBJECTS:.o=.d)
