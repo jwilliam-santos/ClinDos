@@ -1,4 +1,5 @@
 #include "idt.h"
+#include <stdint.h>
 
 /*EXCEÇÕES DA CPU*/
 void division_error_handler()
@@ -333,7 +334,15 @@ void timer_handler()
 
 void keyboard_handler()
 {
-    // IRQ 1
+   //Teclas
+   
+    uint8_t teclas[256];
+    char scancode_to_char(uint8_t scancode){}
+
+    
+
+    
+
 }
 
 
