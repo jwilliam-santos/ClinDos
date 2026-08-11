@@ -1,5 +1,5 @@
 #include "idt.h"
-
+extern volatile char last_key;
 const char scancode_ascii[128] = {
     0,    27,  '1',  '2',  '3',  '4',  '5',  '6',  '7',  '8',  '9',  '0',  '-',  '=',  // 0x00 - 0x0E
   '\\',  'q',  'w',  'e',  'r',  't',  'y',  'u',  'i',  'o',  'p',  '[',  ']',  // 0x0F - 0x1C
@@ -338,11 +338,11 @@ void timer_handler()
 }
 
 // Altere de void para char
-char keyboard_handler(unsigned char scancode){
+void  keyboard_handler(const unsigned char scancode){
     if (scancode < sizeof(scancode_ascii)) {
-        return scancode_ascii[scancode];
+        last_key = scancode_ascii[scancode];
     }
-    return 0;
+
 
     
 
