@@ -1,6 +1,12 @@
 #include "idt.h"
 #include <stdint.h>
-
+const char scancode_ascii[128] = {
+    0,    27,  '1',  '2',  '3',  '4',  '5',  '6',  '7',  '8',  '9',  '0',  '-',  '=',  // 0x00 - 0x0E
+  '\\',  'q',  'w',  'e',  'r',  't',  'y',  'u',  'i',  'o',  'p',  '[',  ']',  // 0x0F - 0x1C
+     0,  'a',  's',  'd',  'f',  'g',  'h',  'j',  'k',  'l',  ';', '\'',  '`',        // 0x1D - 0x29
+     0,   'z',  'x',  'c',  'v',  'b',  'n',  'm',  ',',  '.',  '/',    0,        // 0x2A - 0x35
+   '*',    0,  ' '                                                                      // 0x36 - 0x39
+};
 /*EXCEÇÕES DA CPU*/
 void division_error_handler()
 {
@@ -331,19 +337,17 @@ void timer_handler()
     // IRQ 0
 }
 
-
-void keyboard_handler()
-{
-   //Teclas
-   
-    uint8_t teclas[256];
-    char scancode_to_char(uint8_t scancode){}
-
-    
+// Altere de void para char
+char keyboard_handler(unsigned char scancode){
+    if (scancode < sizeof(scancode_ascii)) {
+        return scancode_ascii[scancode];
+    }
+    return 0;
 
     
 
 }
+
 
 
 void irq2_handler()

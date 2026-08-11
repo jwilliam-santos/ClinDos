@@ -108,7 +108,7 @@ void reserved31_handler(void);
 // ==============================
 
 void timer_handler(void);
-void keyboard_handler(void);
+char keyboard_handler(unsigned char scancode);
 void irq2_handler(void);
 void irq3_handler(void);
 void irq4_handler(void);
@@ -166,7 +166,7 @@ void reserved31_handler(void);
 // ==============================
 
 void timer_handler(void);
-void keyboard_handler(void);
+char keyboard_handler(unsigned char scancode);
 void irq2_handler(void);
 void irq3_handler(void);
 void irq4_handler(void);
