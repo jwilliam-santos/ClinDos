@@ -163,7 +163,18 @@ ISR_NO_ERROR 31, reserved31_handler
 
 ; ---- Hardware IRQs (IDT 32-47) ----
 IRQ 0,  timer_handler
-IRQ 1,  keyboard_handler
+global irq1
+irq1:
+    PUSH_REGS
+    cld
+    xor eax, eax
+    in al, 0x60          ; lê scancode do port do teclado
+    movzx edi, al        ; 1º argumento pela ABI x86_64
+    call keyboard_handler
+    mov al, 0x20
+    out 0x20, al         ; EOI
+    POP_REGS
+    iretq
 IRQ 2,  irq2_handler
 IRQ 3,  irq3_handler
 IRQ 4,  irq4_handler

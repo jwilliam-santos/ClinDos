@@ -63,7 +63,11 @@ $(BUILD)/kernel.img: $(BUILD)/bootloader.bin $(BUILD)/kernel.bin
 
 run: $(BUILD)/kernel.img
 	qemu-system-x86_64 -machine pc -cpu qemu64 \
-		-drive format=raw,file=$<,if=floppy -boot a
+		-drive format=raw,file=$<,if=floppy -boot a \
+		-monitor none \
+		-serial none \
+		-parallel none \
+		-no-reboot
 
 clean:
 	rm -rf $(BUILD)

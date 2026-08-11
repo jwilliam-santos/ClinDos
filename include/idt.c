@@ -1,12 +1,22 @@
 #include "idt.h"
 extern volatile char last_key;
 const char scancode_ascii[128] = {
-    0,    27,  '1',  '2',  '3',  '4',  '5',  '6',  '7',  '8',  '9',  '0',  '-',  '=',  // 0x00 - 0x0E
-  '\\',  'q',  'w',  'e',  'r',  't',  'y',  'u',  'i',  'o',  'p',  '[',  ']',  // 0x0F - 0x1C
-     0,  'a',  's',  'd',  'f',  'g',  'h',  'j',  'k',  'l',  ';', '\'',  '`',        // 0x1D - 0x29
-     0,   'z',  'x',  'c',  'v',  'b',  'n',  'm',  ',',  '.',  '/',    0,        // 0x2A - 0x35
-   '*',    0,  ' '                                                                      // 0x36 - 0x39
+//  0     1     2     3     4     5     6     7     8     9     A     B     C     D     E     F
+    0,   27,  '1',  '2',  '3',  '4',  '5',  '6',  '7',  '8',  '9',  '0',  '-',  '=',    8,    9, // 0x00
+  'q',  'w',  'e',  'r',  't',  'y',  'u',  'i',  'o',  'p',  '[',  ']',   13,    0,  'a',  's', // 0x10
+  'd',  'f',  'g',  'h',  'j',  'k',  'l',  ';', '\'',  '`',    0, '\\',  'z',  'x',  'c',  'v', // 0x20
+  'b',  'n',  'm',  ',',  '.',  '/',    0,  '*',    0,  ' ',    0,    0,    0,    0,    0,    0, // 0x30
+    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, // 0x40
+    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, // 0x50
+    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, // 0x60
+    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, // 0x70
 };
+
+static inline void outb(uint16_t port, uint8_t val) {
+    __asm__ volatile("outb %0, %1" :: "a"(val), "Nd"(port));
+}
+
+
 /*EXCEÇÕES DA CPU*/
 void division_error_handler()
 {
@@ -338,16 +348,17 @@ void timer_handler()
 }
 
 // Altere de void para char
-void  keyboard_handler(const unsigned char scancode){
+void keyboard_handler(const unsigned char scancode) {
     if (scancode < sizeof(scancode_ascii)) {
-        last_key = scancode_ascii[scancode];
+        char c = scancode_ascii[scancode];
+        if (c != 0 && !(scancode & 0x80)) { // ignora key release (bit 7)
+            last_key = c;
+        }
     }
 
-
-    
-
+    // EOI — SEM ISSO o teclado para depois da 1ª tecla
+    __asm__ volatile("outb %0, %1" :: "a"((uint8_t)0x20), "Nd"((uint16_t)0x20));
 }
-
 
 
 void irq2_handler()
@@ -431,4 +442,33 @@ void primary_ata_handler()
 void secondary_ata_handler()
 {
     // IRQ 15
+}
+void idt_init(void) {
+    // remapeia PIC: IRQ0-7 → 0x20-0x27, IRQ8-15 → 0x28-0x2F
+    // ICW1
+    outb(0x20, 0x11); outb(0xA0, 0x11);
+    // ICW2
+    outb(0x21, 0x20); outb(0xA1, 0x28);
+    // ICW3
+    outb(0x21, 0x04); outb(0xA1, 0x02);
+    // ICW4
+    outb(0x21, 0x01); outb(0xA1, 0x01);
+    // mascara tudo exceto IRQ1 (teclado)
+    outb(0x21, 0xFD);
+    outb(0xA1, 0xFF);
+
+    // exceções
+    set_idt_entry(isr0,  0x8E, 0);
+    set_idt_entry(isr1,  0x8E, 1);
+    // ... isr2 até isr31
+    set_idt_entry(isr31, 0x8E, 31);
+
+    // IRQs
+    set_idt_entry(irq0,  0x8E, 32);
+    set_idt_entry(irq1,  0x8E, 33);  // teclado
+    set_idt_entry(irq2,  0x8E, 34);
+    // ... até irq15
+    set_idt_entry(irq15, 0x8E, 47);
+
+    load_IDT();
 }

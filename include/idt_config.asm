@@ -11,6 +11,7 @@ KERNEL_CS equ 0x08
 ; void load_IDT(void);
 load_IDT:
     lidt [rel idtr]
+    sti
     ret
 
 ; void set_idt_entry(void *isr, uint8_t flags, uint8_t index);

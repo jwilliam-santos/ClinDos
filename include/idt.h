@@ -5,7 +5,7 @@
 #include "vga.h"
 extern void load_IDT(void);
 extern void set_idt_entry(void *isr, uint8_t flags, uint8_t index);
-
+void idt_init(void);
 // ==============================
 // Exceções da CPU (0 - 31)
 // ==============================

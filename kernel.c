@@ -3,16 +3,20 @@
 volatile char last_key = 0;
 
 
-void kernel() {
-    vga_print("Hello World, ClinDos x86_64!");
-   
+extern void idt_init(void);
 
-    while(1){
-            if (last_key != 0) {
+void kernel() {
+    idt_init();
+    vga_clear();
+    vga_set_color(VGA_WHITE, VGA_BLACK);
+    vga_print(">");
+    vga_set_color(VGA_LIGHT_GREEN, VGA_BLACK);
+
+    while (1) {
+        __asm__ volatile("hlt");
+        if (last_key != 0) {
             vga_putchar(last_key);
             last_key = 0;
         }
-
     }
- 
 }
