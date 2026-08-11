@@ -1,3 +1,4 @@
+OUTPUT_FORMAT(elf64-x86-64)
 ENTRY(entry)
 
 SECTIONS
@@ -27,9 +28,6 @@ SECTIONS
         __bss_end = .;
     }
 
-    .idt :
-    {
-        __idt_start__ =  0xF000;
-         
-    }
+    /* Endereço físico fixo da IDT (ainda não alocada como seção real) */
+    __idt_start__ = 0xF000;
 }

@@ -4,8 +4,9 @@
 
 
 void kernel() {
+    vga_print("Hello World, ClinDos x86_64!");
 
-    vga_print("Hello World, ClinDos!");
-
-    while(1);
+    while (1) {
+        __asm__ volatile ("hlt");
+    }
 }
